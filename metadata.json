@@ -1,0 +1,7 @@
+{
+  "name": "Aasma AI Assistant",
+  "description": "A real-time, voice-to-voice AI assistant with a sassy and witty personality.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

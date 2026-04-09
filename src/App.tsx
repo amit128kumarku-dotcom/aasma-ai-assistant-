@@ -52,9 +52,26 @@ export default function App() {
 
       try {
         await audioRef.current.startRecording();
+      } catch (err: any) {
+        console.error("Failed to start recording:", err);
+        if (err.name === 'NotAllowedError' || err.message?.includes('Permission denied')) {
+          alert("Microphone permission denied. Please allow microphone access in your browser to use Aasma.");
+        } else {
+          alert(`Failed to access microphone: ${err.message || err}`);
+        }
+        setSessionState('disconnected');
+        return;
+      }
+
+      try {
         await sessionRef.current.connect();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to start session:", err);
+        if (err.message?.includes('Permission denied') || err.status === 403) {
+          alert("API Permission denied. Your GEMINI_API_KEY might not have access to the Live API or the selected model.");
+        } else {
+          alert(`Failed to connect to Gemini API: ${err.message || err}`);
+        }
         setSessionState('disconnected');
       }
 

@@ -131,7 +131,9 @@ Keep your responses concise and conversational.`
       this.session = await this.sessionPromise;
     } catch (error) {
       console.error("Failed to connect:", error);
+      this.isConnected = false;
       if (this.onStateChange) this.onStateChange('disconnected');
+      throw error;
     }
   }
 

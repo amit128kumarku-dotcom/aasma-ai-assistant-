@@ -58,6 +58,7 @@ export class AudioStreamer {
 
     try {
       await this.recordingContext.audioWorklet.addModule(url);
+      if (!this.recordingContext) return;
       this.recordingWorkletNode = new AudioWorkletNode(this.recordingContext, 'recorder-processor');
       
       this.recordingWorkletNode.port.onmessage = (e) => {
@@ -195,6 +196,7 @@ export class AudioStreamer {
     
     try {
       await this.playbackContext.audioWorklet.addModule(url);
+      if (!this.playbackContext) return;
       this.workletNode = new AudioWorkletNode(this.playbackContext, 'pcm-processor');
       this.workletNode.connect(this.playbackContext.destination);
       this.isWorkletReady = true;

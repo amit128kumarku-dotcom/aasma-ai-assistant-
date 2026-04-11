@@ -1,0 +1,31 @@
+{
+  "entities": {
+    "Note": {
+      "title": "Note",
+      "description": "A saved note or important memory for a user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user ID of the note owner."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the note or memory."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the note was created."
+        }
+      },
+      "required": ["uid", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/Note" },
+      "description": "Notes belonging to a specific user."
+    }
+  }
+}

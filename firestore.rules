@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users/{userId}/notes
+    // Document ID: auto-generated
+    // Fields:
+    //   - uid: string (required) - The user ID of the note owner.
+    //   - title: string (required, max 200 chars) - The title of the note.
+    //   - content: string (required, max 5000 chars) - The content of the note.
+    //   - createdAt: string (required) - ISO 8601 date string.
+    //   - isShared: boolean (optional) - Whether the note is shared via link.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+       return request.resource.data.keys().hasAll(fields);
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isValidNote(userId) {
+      let data = request.resource.data;
+      return hasRequiredFields(['uid', 'title', 'content', 'createdAt']) &&
+             hasOnlyAllowedFields(['uid', 'title', 'content', 'createdAt', 'isShared']) &&
+             data.uid == userId &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.content is string && data.content.size() >= 0 && data.content.size() <= 50000 &&
+             isValidDateString(data.createdAt) &&
+             (!('isShared' in data) || data.isShared is bool);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId}/notes/{noteId} {
+      allow read: if isOwner(userId) || resource.data.isShared == true;
+      allow create: if isOwner(userId) && isValidNote(userId);
+      allow update: if isOwner(userId) && isValidNote(userId) && areImmutableFieldsUnchanged(['uid', 'createdAt']);
+      allow delete: if isOwner(userId);
+    }
+  }
+}
